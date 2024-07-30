@@ -18,16 +18,11 @@ def con_component(img):
 
 
 def find_cont(img):
-    # plt.imshow(img, cmap='gray')
-    # plt.show()
     number_images = []
     contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    print("Number of Contours found = " + str(len(contours)))
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
         number_image = img[y:y + h, x:x + w]
         number_images.append((padding(number_image), (x, y, w, h)))
-        # plt.imshow(padding(number_image), cmap='gray')
-        # plt.show()
     res = sorted(number_images, key=lambda item: item[1][0])
     return res

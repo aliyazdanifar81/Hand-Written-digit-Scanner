@@ -1,28 +1,33 @@
 import os
+import sys
 
-import matplotlib.pyplot as plt
+sys.path.append('./../')
+from Metrics import cer
 import numpy as np
 from preprocess import preprocess as pep, resizing
 from find_contours import find_cont, con_component
+from importData import fetch_data
 import tensorflow as tf
 
 if __name__ == '__main__':
-    for sample in os.listdir('./../Dataset/ORAND-CAR-2014/CAR-A/a_train_images'):
-        data_path = f'./../Dataset/ORAND-CAR-2014/CAR-A/a_train_images/{sample}'
-        preprocessed_img = pep(data_path).astype('uint8')
-        plt.imshow(preprocessed_img, cmap='gray')
-        plt.show()
+    predicted = []
+    x, y = fetch_data()
+    for sample in x:
+        preprocessed_img = pep(sample).astype('uint8')
         numbers = find_cont(preprocessed_img)
         final_images = resizing(numbers)
-        model = tf.keras.models.load_model('./my_model2.h5')
+        model = tf.keras.models.load_model('./my_model.h5')
         detected = 0
         for num in final_images:
             num = num / 255.0
-            plt.imshow(num, cmap='gray')
-            plt.show()
             pre = model.predict(num.reshape(-1, 28, 28, 1))
-            print(f'Maybe : {np.argmax(pre)}')
-            if np.max(pre) > 0.8:
+            if len(num[num == 1]) / len(num[num == 0]) > 42:
                 detected += np.argmax(pre)
                 detected *= 10
-        print(detected // 10)
+        predicted.append(detected)
+res, same = 0, 0
+for i in range(len(y)):
+    if y[i] == predicted[i]:
+        same += 1
+    res += cer(y[i], predicted[i])
+print(f'Mean of error rate is {res / len(y)}')
